@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE `contacto` MODIFY `fechaAlta` DATE NOT NULL DEFAULT (CURRENT_DATE);
+
+-- AlterTable
+ALTER TABLE `operacion` MODIFY `fechaAlta` DATE NOT NULL DEFAULT (CURRENT_DATE);
+
+-- AlterTable
+ALTER TABLE `propiedad` MODIFY `fechaAlta` DATE NOT NULL DEFAULT (CURRENT_DATE);

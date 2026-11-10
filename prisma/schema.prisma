@@ -1,0 +1,533 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoPersona {
+  FISICA
+  JURIDICA
+}
+
+enum Sexo {
+  F
+  M
+  X
+}
+
+enum TipoSocietario {
+  SA
+  SRL
+  SAS
+  COOPERATIVA
+}
+
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+}
+
+enum EstadoConsulta {
+  PENDIENTE
+  EN_SEGUIMIENTO
+  CERRADA
+}
+
+enum TipoOperacionBusqueda {
+  COMPRA
+  ALQUILER
+}
+
+enum TipoPropiedad {
+  CASA
+  DEPARTAMENTO
+  TERRENO
+  LOCAL
+  OFICINA
+}
+
+enum Moneda {
+  USD
+  ARS
+}
+
+enum AptoCredito {
+  NO_ESPECIFICADO
+  APTO_CREDITO
+  NO_APTO_CREDITO
+}
+
+enum EstadoPropiedad {
+  DISPONIBLE
+  RESERVADA
+  VENDIDA
+  ALQUILADA
+  RETIRADA
+}
+
+enum TipoInteraccion {
+  SEGUIMIENTO
+  ENTREVISTA_CAPTACION
+}
+
+enum MedioInteraccion {
+  LLAMADA
+  WHATSAPP
+  MAIL
+  EN_PERSONA
+}
+
+enum TipoOperacion {
+  VENTA
+  ALQUILER
+}
+
+enum TipoOperacionEtapa {
+  VENTA
+  ALQUILER
+  AMBAS
+}
+
+enum EstadoOferta {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+  CONTRAOFERTA
+}
+
+enum EstadoContrato {
+  VIGENTE
+  POR_VENCER
+  VENCIDO
+  RENOVADO
+  RESCINDIDO
+}
+
+enum FrecuenciaAjuste {
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+enum IndiceAjuste {
+  IPC
+  ICL
+  PORCENTAJE_FIJO
+  MONTO_FIJO
+}
+
+enum TipoDocumento {
+  ESCRITURA
+  PLANO
+  REGLAMENTO_PH
+  COPIA_LLAVE
+  CERTIFICADO_DOMINIO
+}
+
+model Contacto {
+  id            Int         @id @default(autoincrement())
+  idUsuario     Int?
+  tipoPersona   TipoPersona
+  cuitCuil      String?     @unique
+  telefono      String?
+  mail          String?
+  domicilio     String?
+  localidad     String?
+  fechaAlta     DateTime    @default(dbgenerated("(CURRENT_DATE)")) @db.Date
+  observaciones String?
+  activo        Boolean     @default(true)
+
+  usuario          Usuario?           @relation("ContactoAgente", fields: [idUsuario], references: [id], onDelete: SetNull)
+  personaFisica    PersonaFisica?
+  personaJuridica  PersonaJuridica?
+  consultas        Consulta[]
+  visitas          Visita[]
+  busquedas        Busqueda[]
+  interacciones    Interaccion[]
+  ofertas          Oferta[]
+  operaciones      Operacion[]        @relation("OperacionCliente")
+  contratosGarante ContratoAlquiler[] @relation("ContratoAlquilerGarante")
+  roles            ContactoRol[]
+  propiedades      PropPropietario[]
+
+  @@map("Contacto")
+}
+
+model PersonaFisica {
+  id             Int             @id
+  apellido       String
+  nombres        String
+  dni            Int             @unique
+  fechaNac       DateTime        @db.Date
+  sexo           Sexo
+  contacto       Contacto        @relation(fields: [id], references: [id], onDelete: Cascade)
+  usuario        Usuario?
+  representantes Representante[] @relation("RepresentantePersonaFisica")
+
+  @@map("PersonaFisica")
+}
+
+model PersonaJuridica {
+  id                Int             @id
+  razonSocial       String
+  nombreFantasia    String?
+  tipoSocietario    TipoSocietario
+  fechaConstitucion DateTime        @db.Date
+  contacto          Contacto        @relation(fields: [id], references: [id], onDelete: Cascade)
+  representantes    Representante[] @relation("RepresentantePersonaJuridica")
+
+  @@map("PersonaJuridica")
+}
+
+model Representante {
+  idPersonaJuridica     Int
+  idPersonaFisica       Int
+  cargo                 String
+  fechaDesde            DateTime  @db.Date
+  fechaHasta            DateTime? @db.Date
+  esPrincipal           Boolean
+  documentacionRespaldo String?
+
+  personaJuridica PersonaJuridica @relation("RepresentantePersonaJuridica", fields: [idPersonaJuridica], references: [id], onDelete: Cascade)
+  personaFisica   PersonaFisica   @relation("RepresentantePersonaFisica", fields: [idPersonaFisica], references: [id], onDelete: Cascade)
+
+  @@id([idPersonaJuridica, idPersonaFisica])
+  @@map("Representante")
+}
+
+model Rol {
+  id             Int           @id @default(autoincrement())
+  descripcionRol String        @unique
+  contactos      ContactoRol[]
+
+  @@map("Rol")
+}
+
+model ContactoRol {
+  idContacto Int
+  idRol      Int
+
+  contacto Contacto @relation(fields: [idContacto], references: [id], onDelete: Cascade)
+  rol      Rol      @relation(fields: [idRol], references: [id], onDelete: Cascade)
+
+  @@id([idContacto, idRol])
+  @@map("ContactoRol")
+}
+
+model Usuario {
+  id              Int           @id @default(autoincrement())
+  idPersonaFisica Int           @unique
+  nombreUsuario   String        @unique
+  mail            String        @unique
+  contrasena      String
+  estado          EstadoUsuario
+  ultimoAcceso    DateTime?
+
+  personaFisica PersonaFisica   @relation(fields: [idPersonaFisica], references: [id], onDelete: Cascade)
+  contactos     Contacto[]      @relation("ContactoAgente")
+  consultas     Consulta[]
+  visitas       Visita[]
+  interacciones Interaccion[]
+  propiedades   Propiedad[]
+  operaciones   Operacion[]
+  perfiles      PerfilUsuario[]
+
+  @@map("Usuario")
+}
+
+model Perfil {
+  id          Int              @id @default(autoincrement())
+  nombre      String           @unique
+  descripcion String
+  usuarios    PerfilUsuario[]
+  programas   PerfilPrograma[]
+
+  @@map("Perfil")
+}
+
+model PerfilUsuario {
+  idUsuario Int
+  idPerfil  Int
+
+  usuario Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  perfil  Perfil  @relation(fields: [idPerfil], references: [id], onDelete: Cascade)
+
+  @@id([idUsuario, idPerfil])
+  @@map("PerfilUsuario")
+}
+
+model Menu {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  orden     Int
+  icono     String?
+  programas Programa[]
+
+  @@map("Menu")
+}
+
+model Programa {
+  id       Int              @id @default(autoincrement())
+  idMenu   Int
+  nombre   String
+  ruta     String
+  orden    Int
+  menu     Menu             @relation(fields: [idMenu], references: [id], onDelete: Cascade)
+  perfiles PerfilPrograma[]
+
+  @@map("Programa")
+}
+
+model PerfilPrograma {
+  idPerfil      Int
+  idPrograma    Int
+  puedeVer      Boolean @default(false)
+  puedeCrear    Boolean @default(false)
+  puedeEditar   Boolean @default(false)
+  puedeEliminar Boolean @default(false)
+
+  perfil   Perfil   @relation(fields: [idPerfil], references: [id], onDelete: Cascade)
+  programa Programa @relation(fields: [idPrograma], references: [id], onDelete: Cascade)
+
+  @@id([idPerfil, idPrograma])
+  @@map("PerfilPrograma")
+}
+
+model Canal {
+  id          Int        @id @default(autoincrement())
+  descripcion String     @unique
+  consultas   Consulta[]
+
+  @@map("Canal")
+}
+
+model Consulta {
+  id          Int            @id @default(autoincrement())
+  idContacto  Int
+  idPropiedad Int?
+  idUsuario   Int
+  idCanal     Int
+  fecha       DateTime       @default(now())
+  mensaje     String         @db.Text
+  estado      EstadoConsulta
+
+  contacto  Contacto   @relation(fields: [idContacto], references: [id], onDelete: Cascade)
+  propiedad Propiedad? @relation(fields: [idPropiedad], references: [id], onDelete: SetNull)
+  usuario   Usuario    @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  canal     Canal      @relation(fields: [idCanal], references: [id], onDelete: Cascade)
+
+  @@map("Consulta")
+}
+
+model Visita {
+  id          Int      @id @default(autoincrement())
+  idContacto  Int
+  idPropiedad Int
+  idUsuario   Int
+  fechaHora   DateTime @default(now())
+  resultado   String?
+
+  contacto  Contacto  @relation(fields: [idContacto], references: [id], onDelete: Cascade)
+  propiedad Propiedad @relation(fields: [idPropiedad], references: [id], onDelete: Cascade)
+  usuario   Usuario   @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+
+  @@map("Visita")
+}
+
+model Busqueda {
+  id              Int                   @id @default(autoincrement())
+  idContacto      Int
+  tipoOperacion   TipoOperacionBusqueda
+  tipoPropiedad   TipoPropiedad
+  presupuestoMax  Decimal?              @db.Decimal(14, 2)
+  moneda          Moneda?
+  zona            String?
+  ambientes       Int?
+  dormitorios     Int?
+  antiguedadMax   Int?
+  requiereCredito Boolean?              @default(false)
+  activa          Boolean               @default(true)
+
+  contacto        Contacto         @relation(fields: [idContacto], references: [id], onDelete: Cascade)
+  caracteristicas Caracteristica[]
+
+  @@map("Busqueda")
+}
+
+model Interaccion {
+  id                Int              @id @default(autoincrement())
+  idContacto        Int
+  idUsuario         Int
+  idOperacion       Int?
+  tipoInteraccion   TipoInteraccion
+  fecha             DateTime         @default(now())
+  medio             MedioInteraccion
+  resultado         String
+  notas             String?
+  proximaAccion     String?
+  fechaProxContacto DateTime?        @db.Date
+
+  contacto  Contacto   @relation(fields: [idContacto], references: [id], onDelete: Cascade)
+  usuario   Usuario    @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  operacion Operacion? @relation(fields: [idOperacion], references: [id], onDelete: SetNull)
+
+  @@map("Interaccion")
+}
+
+model Propiedad {
+  id              Int             @id @default(autoincrement())
+  idUsuario       Int
+  tipoPropiedad   TipoPropiedad
+  direccion       String
+  localidad       String?
+  esPH            Boolean         @default(false)
+  ambientes       Int?
+  dormitorios     Int?
+  antiguedadAnios Int?
+  superficie      Decimal?        @db.Decimal(10, 2)
+  aptoCredito     AptoCredito     @default(NO_ESPECIFICADO)
+  latitud         Decimal?        @db.Decimal(9, 6)
+  longitud        Decimal?        @db.Decimal(9, 6)
+  descripcion     String?
+  llaveEntregada  Boolean         @default(false)
+  estado          EstadoPropiedad
+  fechaAlta       DateTime        @default(dbgenerated("(CURRENT_DATE)")) @db.Date
+
+  usuario         Usuario           @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  consultas       Consulta[]
+  visitas         Visita[]
+  operaciones     Operacion[]
+  documentaciones Documentacion[]
+  propietarios    PropPropietario[]
+  caracteristicas Caracteristica[]
+
+  @@map("Propiedad")
+}
+
+model PropPropietario {
+  idPropiedad Int
+  idContacto  Int
+  porcentaje  Decimal @db.Decimal(5, 2)
+
+  propiedad Propiedad @relation(fields: [idPropiedad], references: [id], onDelete: Cascade)
+  contacto  Contacto  @relation(fields: [idContacto], references: [id], onDelete: Cascade)
+
+  @@id([idPropiedad, idContacto])
+  @@map("PropPropietario")
+}
+
+model Documentacion {
+  id            Int           @id @default(autoincrement())
+  idPropiedad   Int
+  tipoDocumento TipoDocumento
+  entregado     Boolean       @default(false)
+  fechaEntrega  DateTime?     @db.Date
+  observaciones String?
+
+  propiedad Propiedad @relation(fields: [idPropiedad], references: [id], onDelete: Cascade)
+
+  @@map("Documentacion")
+}
+
+model Caracteristica {
+  id          Int     @id @default(autoincrement())
+  descripcion String  @unique
+  categoria   String?
+
+  propiedades Propiedad[]
+  busquedas   Busqueda[]
+
+  @@map("Caracteristica")
+}
+
+model EtapaOperacion {
+  id            Int                @id @default(autoincrement())
+  descripcion   String
+  orden         Int
+  tipoOperacion TipoOperacionEtapa
+
+  operaciones Operacion[]
+
+  @@map("EtapaOperacion")
+}
+
+model MotivoBaja {
+  id          Int         @id @default(autoincrement())
+  descripcion String      @unique
+  operaciones Operacion[]
+
+  @@map("MotivoBaja")
+}
+
+model Operacion {
+  id                     Int           @id @default(autoincrement())
+  idPropiedad            Int
+  idUsuario              Int
+  idEtapa                Int
+  idMotivoBaja           Int?
+  idCliente              Int?
+  tipoOperacion          TipoOperacion
+  precioUSD              Decimal?      @db.Decimal(14, 2)
+  precioARS              Decimal?      @db.Decimal(14, 2)
+  montoCierre            Decimal?      @db.Decimal(14, 2)
+  monedaCierre           Moneda?
+  honorarios             Decimal?      @db.Decimal(14, 2)
+  valorSugerido          Decimal?      @db.Decimal(14, 2)
+  esExclusiva            Boolean?
+  fechaFirmaAutorizacion DateTime?     @db.Date
+  fechaVencAutorizacion  DateTime?     @db.Date
+  fechaAlta              DateTime      @default(dbgenerated("(CURRENT_DATE)")) @db.Date
+  fechaCierre            DateTime?     @db.Date
+
+  propiedad     Propiedad          @relation(fields: [idPropiedad], references: [id], onDelete: Cascade)
+  usuario       Usuario            @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  etapa         EtapaOperacion     @relation(fields: [idEtapa], references: [id], onDelete: Cascade)
+  motivoBaja    MotivoBaja?        @relation(fields: [idMotivoBaja], references: [id], onDelete: SetNull)
+  cliente       Contacto?          @relation("OperacionCliente", fields: [idCliente], references: [id], onDelete: SetNull)
+  interacciones Interaccion[]
+  ofertas       Oferta[]
+  contratos     ContratoAlquiler[]
+
+  @@map("Operacion")
+}
+
+model Oferta {
+  id          Int          @id @default(autoincrement())
+  idOperacion Int
+  idContacto  Int
+  monto       Decimal      @db.Decimal(14, 2)
+  moneda      Moneda
+  fecha       DateTime     @db.Date
+  estado      EstadoOferta
+
+  operacion Operacion @relation(fields: [idOperacion], references: [id], onDelete: Cascade)
+  contacto  Contacto  @relation(fields: [idContacto], references: [id], onDelete: Cascade)
+
+  @@map("Oferta")
+}
+
+model ContratoAlquiler {
+  id               Int              @id @default(autoincrement())
+  idOperacion      Int
+  nroRenovacion    Int
+  fechaFirma       DateTime         @db.Date
+  fechaInicio      DateTime         @db.Date
+  fechaVencimiento DateTime         @db.Date
+  montoAlquiler    Decimal          @db.Decimal(14, 2)
+  moneda           Moneda
+  frecuenciaAjuste FrecuenciaAjuste
+  indiceAjuste     IndiceAjuste
+  depositoGarantia Decimal          @db.Decimal(14, 2)
+  diasAviso        Int
+  estado           EstadoContrato
+  fechaRescision   DateTime?        @db.Date
+
+  operacion Operacion  @relation(fields: [idOperacion], references: [id], onDelete: Cascade)
+  garantes  Contacto[] @relation("ContratoAlquilerGarante")
+
+  @@unique([idOperacion, nroRenovacion])
+  @@map("ContratoAlquiler")
+}
