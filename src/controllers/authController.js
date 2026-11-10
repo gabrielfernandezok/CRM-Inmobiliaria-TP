@@ -1,6 +1,14 @@
 const { z } = require('zod');
 const { registerUser, loginUser } = require('../services/authService');
 
+const dateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  }, 'La fecha no es válida');
+
 const registerSchema = z.object({
   nombreUsuario: z.string().min(3),
   mail: z.string().email(),
@@ -8,7 +16,7 @@ const registerSchema = z.object({
   apellido: z.string().min(1),
   nombres: z.string().min(1),
   dni: z.coerce.number().int().positive(),
-  fechaNac: z.string().min(1),
+  fechaNac: dateSchema,
   sexo: z.enum(['F', 'M', 'X']),
 });
 

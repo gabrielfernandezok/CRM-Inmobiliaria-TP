@@ -34,9 +34,11 @@ function requireContactAccess(usuario, contacto) {
   if (!isAdmin && !isAgent) {
     throw errorWithStatus(403, 'No tiene permisos para esta acción');
   }
+
   if (!isAdmin && contacto.idUsuario !== usuario.id) {
     throw errorWithStatus(404, 'Recurso no encontrado');
   }
+
 }
 
 async function asignarRolesContacto(tx, idContacto, roles) {

@@ -41,6 +41,32 @@ npm run dev
 
 El servidor escucha por defecto en `http://localhost:3000`. Puedes cambiar el puerto con `PORT`.
 
+## Tests automatizados
+
+Ejecuta la suite con:
+
+```powershell
+npm test
+```
+
+Los tests de integración hacen solicitudes HTTP a la app Express real, pasando por rutas, autenticación, validación y servicios. También hay tests unitarios de servicios para reglas de negocio y ramas de error. Prisma se simula para que no haga falta una base MySQL de pruebas. La suite exige al menos 60 % de cobertura de sentencias y líneas; los reportes se guardan en `coverage/`, excluida de Git.
+
+La suite en `tests/api.integration.test.js` verifica:
+
+1. `POST /auth/registro`: crea la cuenta y no expone la contraseña.
+2. `POST /auth/login`: acepta credenciales válidas y devuelve un JWT.
+3. `POST /auth/login`: devuelve `401` para credenciales inválidas.
+4. `GET /contactos`: devuelve `401` si falta el token.
+5. `POST /contactos`: devuelve `400` ante un cuerpo incompleto.
+6. `GET /contactos`: lista los contactos asignados al agente autenticado.
+7. `POST /contactos`: crea un contacto y lo asigna al agente autenticado.
+8. `GET /contactos/:id`: devuelve `404` para un contacto inexistente.
+9. `GET /contactos/:id`: impide que un agente vea el contacto de otro agente y responde `404`.
+10. `PATCH /contactos/:id`: impide que un agente modifique el contacto de otro agente y no ejecuta actualizaciones.
+11. `PATCH /contactos/:id`: permite actualizar el contacto propio del agente.
+
+`tests/crm.services.test.js` cubre creación/listado de consultas y propiedades, ownership de recursos, operaciones, cambios de etapa y motivo de baja, ofertas, contratos y renovaciones, menú y catálogos. `tests/usuarios.services.test.js` cubre listados administrativos, asignación de perfiles y permisos, restricciones de autoedición y último administrador, programas inexistentes y conflictos de concurrencia.
+
 ## Autenticación
 
 Inicia sesión con `POST /auth/login` y envía el token JWT en las rutas protegidas:
@@ -52,6 +78,10 @@ Authorization: Bearer <token>
 ## Endpoints
 
 Los endpoints protegidos requieren autenticación, salvo `POST /auth/registro` y `POST /auth/login`.
+
+## Validación de solicitudes
+
+Todos los endpoints `POST`, `PUT` y `PATCH` validan el body con esquemas Zod mediante el middleware reutilizable `validate` antes de ejecutar el controlador. Los filtros de consulta también se validan en los controladores correspondientes. Las fechas se comprueban como fechas de calendario válidas; ante datos inválidos, la API responde `400` con el mensaje `Datos inválidos` y errores en español.
 
 | # | Método | Ruta | Descripción / acceso |
 |---|---|---|---|

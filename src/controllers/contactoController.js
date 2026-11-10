@@ -48,19 +48,19 @@ const createContactoSchema = z.object({
   apellido: z.string().optional(),
   nombres: z.string().optional(),
   dni: z.coerce.number().int().positive().optional(),
-  fechaNac: z.string().optional(),
+  fechaNac: dateSchema.optional(),
   sexo: z.enum(['F', 'M', 'X']).optional(),
   razonSocial: z.string().optional(),
   nombreFantasia: z.string().optional(),
   tipoSocietario: z.enum(['SA', 'SRL', 'SAS', 'COOPERATIVA']).optional(),
-  fechaConstitucion: z.string().optional(),
+  fechaConstitucion: dateSchema.optional(),
   representantes: z
     .array(
       z.object({
         dni: z.coerce.number().int().positive(),
         cargo: z.string().min(1),
-        fechaDesde: z.string().min(1),
-        fechaHasta: z.string().optional(),
+        fechaDesde: dateSchema,
+        fechaHasta: dateSchema.optional(),
         esPrincipal: z.boolean().optional(),
         documentacionRespaldo: z.string().optional(),
       })
@@ -90,6 +90,16 @@ const createContactoSchema = z.object({
         message: 'Debe indicar al menos un representante',
       });
     }
+
+    for (const [index, representante] of (value.representantes || []).entries()) {
+      if (representante.fechaHasta && representante.fechaHasta < representante.fechaDesde) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['representantes', index, 'fechaHasta'],
+          message: 'La fecha hasta no puede ser anterior a la fecha desde',
+        });
+      }
+    }
   }
 });
 
@@ -110,6 +120,8 @@ const updateContactoSchema = z.object({
   nombreFantasia: z.string().nullable().optional(),
   tipoSocietario: z.enum(['SA', 'SRL', 'SAS', 'COOPERATIVA']).optional(),
   fechaConstitucion: dateSchema.optional(),
+}).refine((value) => Object.keys(value).length > 0, {
+  message: 'Debe enviar al menos un campo para modificar',
 });
 
 function parseId(req, res) {

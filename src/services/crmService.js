@@ -365,28 +365,35 @@ async function crearContrato({ user, idOperacion, data }) {
   }
   await requireIdsExist(prisma.contacto, data.garantes, 'Uno o más garantes no existen');
   const { garantes, ...contractData } = data;
-  return prisma.$transaction(async (tx) => {
-    const ultimo = await tx.contratoAlquiler.findFirst({
-      where: { idOperacion },
-      orderBy: { nroRenovacion: 'desc' },
-    });
-    if (ultimo) {
-      await tx.contratoAlquiler.update({
-        where: { id: ultimo.id },
-        data: { estado: 'RENOVADO' },
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const ultimo = await tx.contratoAlquiler.findFirst({
+        where: { idOperacion },
+        orderBy: { nroRenovacion: 'desc' },
       });
-    }
-    return tx.contratoAlquiler.create({
-      data: {
-        ...contractData,
-        idOperacion,
-        nroRenovacion: ultimo ? ultimo.nroRenovacion + 1 : 0,
-        ...dateFields(contractData, ['fechaFirma', 'fechaInicio', 'fechaVencimiento', 'fechaRescision']),
-        garantes: { connect: garantes.map((id) => ({ id })) },
-      },
-      include: { garantes: true, operacion: true },
+      if (ultimo) {
+        await tx.contratoAlquiler.update({
+          where: { id: ultimo.id },
+          data: { estado: 'RENOVADO' },
+        });
+      }
+      return tx.contratoAlquiler.create({
+        data: {
+          ...contractData,
+          idOperacion,
+          nroRenovacion: ultimo ? ultimo.nroRenovacion + 1 : 0,
+          ...dateFields(contractData, ['fechaFirma', 'fechaInicio', 'fechaVencimiento', 'fechaRescision']),
+          garantes: { connect: garantes.map((id) => ({ id })) },
+        },
+        include: { garantes: true, operacion: true },
+      });
     });
-  });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      throw errorWithStatus(409, 'Ya existe un contrato con ese número de renovación para la operación');
+    }
+    throw error;
+  }
 }
 
 async function listarContratos({ user, query }) {
