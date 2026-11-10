@@ -39,9 +39,15 @@ const mockPrisma = {
 jest.mock('../src/config/prisma', () => mockPrisma);
 
 const bcrypt = require('bcryptjs');
+const express = require('express');
 const jwt = require('jsonwebtoken');
 const request = require('supertest');
+const frontendOrigin = 'http://localhost:5173';
+process.env.FRONTEND_URL = frontendOrigin;
 const app = require('../src/app');
+const authRoutes = require('../src/routes/authRoutes');
+const { createLoginRateLimiter, RATE_LIMIT_MESSAGE } = require('../src/middlewares/loginRateLimiter');
+const { errorHandler } = require('../src/middlewares/errorHandler');
 
 const testPassword = 'ClaveSegura123';
 const testSecret = 'test-secret-for-integration-tests';
@@ -118,6 +124,91 @@ describe('API REST - integración HTTP', () => {
   function as(user) {
     return { Authorization: `Bearer ${tokenFor(user)}` };
   }
+
+  function createLimitedAuthApp(max = 3) {
+    const limitedApp = express();
+    limitedApp.use(express.json());
+    limitedApp.use(
+      '/auth',
+      authRoutes.createAuthRouter({
+        loginRateLimiter: createLoginRateLimiter({ max, windowMs: 15 * 60 * 1000 }),
+      })
+    );
+    limitedApp.use(errorHandler);
+    return limitedApp;
+  }
+
+  test('el cuarto intento de login devuelve 429 y los tres anteriores conservan el 401', async () => {
+    const limitedApp = createLimitedAuthApp(3);
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const response = await request(limitedApp).post('/auth/login').send({
+        nombreUsuario: 'inexistente',
+        contrasena: testPassword,
+      });
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe('Credenciales inválidas');
+    }
+
+    const limitedResponse = await request(limitedApp).post('/auth/login').send({
+      nombreUsuario: 'inexistente',
+      contrasena: testPassword,
+    });
+    expect(limitedResponse.status).toBe(429);
+    expect(limitedResponse.body).toEqual({ message: RATE_LIMIT_MESSAGE });
+  });
+
+  test('el límite de login no bloquea el registro', async () => {
+    const limitedApp = createLimitedAuthApp(3);
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      await request(limitedApp).post('/auth/login').send({
+        nombreUsuario: 'inexistente',
+        contrasena: testPassword,
+      });
+    }
+
+    const registrationResponse = await request(limitedApp)
+      .post('/auth/registro')
+      .send({});
+    expect(registrationResponse.status).toBe(400);
+    expect(registrationResponse.body.message).toBe('Datos inválidos');
+    expect(registrationResponse.status).not.toBe(429);
+  });
+
+  test('CORS permite el origen configurado del frontend', async () => {
+    const response = await request(app)
+      .get('/contactos')
+      .set('Origin', frontendOrigin);
+
+    expect(response.headers['access-control-allow-origin']).toBe(frontendOrigin);
+  });
+
+  test('CORS no permite otros orígenes', async () => {
+    const response = await request(app)
+      .get('/contactos')
+      .set('Origin', 'http://sitio-malicioso.com');
+
+    expect(response.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  test('CORS responde al preflight con métodos y headers permitidos', async () => {
+    const response = await request(app)
+      .options('/contactos')
+      .set('Origin', frontendOrigin)
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', 'authorization');
+
+    expect([200, 204]).toContain(response.status);
+    expect(response.headers['access-control-allow-origin']).toBe(frontendOrigin);
+    expect(response.headers['access-control-allow-credentials']).toBe('true');
+    expect(response.headers['access-control-allow-methods'].split(/,\s*/)).toEqual(
+      expect.arrayContaining(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])
+    );
+    expect(response.headers['access-control-allow-headers'].toLowerCase().split(/,\s*/)).toEqual(
+      expect.arrayContaining(['content-type', 'authorization'])
+    );
+  });
 
   test('POST /auth/registro crea la cuenta y no devuelve la contraseña', async () => {
     const createdContact = { id: 21, tipoPersona: 'FISICA', activo: true };

@@ -41,6 +41,17 @@ npm run dev
 
 El servidor escucha por defecto en `http://localhost:3000`. Puedes cambiar el puerto con `PORT`.
 
+## Frontend
+
+El proyecto React/Vite está separado en `frontend/`. Configura `frontend/.env` a partir de `frontend/.env.example` y ajusta `VITE_API_URL` a la URL del backend. El frontend llama directamente a la API; configura CORS en el backend para permitir el origen de Vite.
+
+```powershell
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+Vite muestra la URL local al iniciar (por defecto `http://localhost:5173`).
+
 ## Tests automatizados
 
 Ejecuta la suite con:

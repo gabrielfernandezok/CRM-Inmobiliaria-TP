@@ -1,5 +1,6 @@
 node_modules/
 coverage/
+frontend/dist/
 .env
 .env.*
 !.env.example
