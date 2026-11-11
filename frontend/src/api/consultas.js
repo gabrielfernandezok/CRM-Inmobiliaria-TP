@@ -13,7 +13,7 @@ export function getConsultationCatalogs() {
 }
 
 export function getConsultationContacts() {
-  return apiRequest('/contactos?activo=true');
+  return apiRequest('/contactos?tipoPersona=FISICA&activo=true');
 }
 
 export function getConsultationProperties() {

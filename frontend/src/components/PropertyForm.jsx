@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ApiErrorMessage from './ApiErrorMessage.jsx';
-import { formatEnum } from '../utils/format.js';
+import { formatContactOption, formatEnum } from '../utils/format.js';
 
 export const PROPERTY_TYPES = ['CASA', 'DEPARTAMENTO', 'TERRENO', 'LOCAL', 'OFICINA'];
 export const PROPERTY_STATES = ['DISPONIBLE', 'RESERVADA', 'VENDIDA', 'ALQUILADA', 'RETIRADA'];
@@ -229,7 +229,7 @@ export default function PropertyForm({
                     )
                   )
                   .map((contact) => (
-                  <option key={contact.id} value={contact.id}>{contact.nombre}</option>
+                  <option key={contact.id} value={contact.id}>{formatContactOption(contact)}</option>
                   ))}
               </select>
             </label>

@@ -123,8 +123,24 @@ async function listarContactos({ usuario, query = {} }) {
   const contactos = await prisma.contacto.findMany({
     where,
     include: {
-      personaFisica: true,
-      personaJuridica: true,
+      personaFisica: {
+        include: {
+          representantes: {
+            include: { personaJuridica: { select: { razonSocial: true } } },
+          },
+        },
+      },
+      personaJuridica: {
+        include: {
+          representantes: {
+            include: {
+              personaFisica: {
+                select: { apellido: true, nombres: true },
+              },
+            },
+          },
+        },
+      },
     },
     orderBy: { fechaAlta: 'desc' },
   });
@@ -137,6 +153,20 @@ async function listarContactos({ usuario, query = {} }) {
     mail: contacto.mail,
     telefono: contacto.telefono,
     idUsuario: contacto.idUsuario,
+    empresasRepresentadas: (contacto.personaFisica?.representantes || [])
+      .filter(({ fechaDesde, fechaHasta }) => {
+        const today = new Date().toISOString().slice(0, 10);
+        const starts = fechaDesde ? new Date(fechaDesde).toISOString().slice(0, 10) : null;
+        const ends = fechaHasta ? new Date(fechaHasta).toISOString().slice(0, 10) : null;
+        return (!starts || starts <= today) && (!ends || ends >= today);
+      })
+      .map(({ personaJuridica }) => personaJuridica?.razonSocial)
+      .filter(Boolean),
+    representantes: (contacto.personaJuridica?.representantes || [])
+      .map(({ personaFisica }) =>
+        `${personaFisica?.apellido || ''} ${personaFisica?.nombres || ''}`.trim()
+      )
+      .filter(Boolean),
   }));
 }
 

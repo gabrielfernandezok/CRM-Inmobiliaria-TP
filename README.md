@@ -118,17 +118,18 @@ Todos los endpoints `POST`, `PUT` y `PATCH` validan el body con esquemas Zod med
 | 14 | GET | `/propiedades` | Lista propiedades; los Agentes ven las propias. |
 | 15 | GET | `/propiedades/:id` | Obtiene la ficha de una propiedad accesible. |
 | 16 | PATCH | `/propiedades/:id` | Modifica una propiedad accesible. |
-| 17 | POST | `/visitas` | Registra una visita. |
-| 18 | POST | `/operaciones` | Abre una operación de venta o alquiler. |
-| 19 | GET | `/operaciones` | Lista operaciones; los Agentes ven las propias. |
-| 20 | PATCH | `/operaciones/:id/etapa` | Cambia la etapa; la etapa de baja requiere motivo. |
-| 21 | POST | `/operaciones/:id/ofertas` | Registra una oferta para la operación. |
-| 22 | POST | `/operaciones/:id/contratos` | Crea un contrato de alquiler o renovación. |
-| 23 | GET | `/contratos` | Lista contratos; los Agentes ven los de sus operaciones. |
-| 24 | GET | `/menu` | Devuelve menús y programas habilitados según el perfil. |
-| 25 | GET | `/catalogos` | Devuelve etapas, canales, características, roles y motivos de baja. |
-| 26 | GET | `/usuarios` | Lista usuarios; requiere perfil Administrador. |
-| 27 | PUT | `/perfiles/:id/programas` | Define programas y permisos de un perfil; requiere Administrador. |
+| 17 | GET | `/propiedades/:id/visitas` | Lista visitas de una propiedad accesible. |
+| 18 | POST | `/visitas` | Registra una visita con una persona física. |
+| 19 | POST | `/operaciones` | Abre una operación de venta o alquiler. |
+| 20 | GET | `/operaciones` | Lista operaciones; los Agentes ven las propias. |
+| 21 | PATCH | `/operaciones/:id/etapa` | Cambia la etapa; la etapa de baja requiere motivo. |
+| 22 | POST | `/operaciones/:id/ofertas` | Registra una oferta para la operación. |
+| 23 | POST | `/operaciones/:id/contratos` | Crea un contrato de alquiler o renovación. |
+| 24 | GET | `/contratos` | Lista contratos; los Agentes ven los de sus operaciones. |
+| 25 | GET | `/menu` | Devuelve menús y programas habilitados según el perfil. |
+| 26 | GET | `/catalogos` | Devuelve etapas, canales, características, roles y motivos de baja. |
+| 27 | GET | `/usuarios` | Lista usuarios; requiere perfil Administrador. |
+| 28 | PUT | `/perfiles/:id/programas` | Define programas y permisos de un perfil; requiere Administrador. |
 
 ### Rutas administrativas adicionales
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createContact, getCatalogs, getContact, getContacts } from '../api/contactos.js';
 import ApiErrorMessage from '../components/ApiErrorMessage.jsx';
+import { formatContactOption } from '../utils/format.js';
 
 const initialForm = {
   tipoPersona: 'FISICA',
@@ -295,7 +296,7 @@ export default function CreateContactPage() {
                       {peopleLoading ? 'Cargando personas…' : 'Seleccionar'}
                     </option>
                     {filteredPeople.map((person) => (
-                      <option key={person.id} value={person.id}>{person.nombre}</option>
+                      <option key={person.id} value={person.id}>{formatContactOption(person)}</option>
                     ))}
                   </select>
                   {!peopleLoading && !peopleError && filteredPeople.length === 0 && (

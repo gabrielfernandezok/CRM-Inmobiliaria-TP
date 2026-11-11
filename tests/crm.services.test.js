@@ -56,13 +56,13 @@ function resetPrisma() {
 
   prismaMock.contacto.findFirst.mockImplementation(({ where }) =>
     where.idUsuario === undefined || where.idUsuario === agent.id
-      ? { id: where.id, idUsuario: agent.id }
+      ? { id: where.id, idUsuario: agent.id, tipoPersona: 'FISICA' }
       : null
   );
   prismaMock.contacto.findMany.mockImplementation(({ where }) =>
     (where.id?.in || []).map((id) => ({ id }))
   );
-  prismaMock.contacto.findUnique.mockResolvedValue({ id: 10 });
+  prismaMock.contacto.findUnique.mockResolvedValue({ id: 10, tipoPersona: 'FISICA' });
   prismaMock.propiedad.findFirst.mockResolvedValue({ id: 20, idUsuario: agent.id });
   prismaMock.operacion.findFirst.mockResolvedValue({
     id: 30,
@@ -201,6 +201,30 @@ describe('servicios CRM', () => {
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
+  test('rechaza empresas como contacto de consultas y visitas', async () => {
+    prismaMock.contacto.findFirst.mockResolvedValue({
+      id: 10,
+      idUsuario: agent.id,
+      tipoPersona: 'JURIDICA',
+    });
+
+    await expect(
+      service.crearConsulta({
+        user: agent,
+        data: { idContacto: 10, idCanal: 2, mensaje: 'Consulta', estado: 'PENDIENTE' },
+      })
+    ).rejects.toMatchObject({ statusCode: 400, message: 'Debe seleccionar una persona física' });
+    await expect(
+      service.crearVisita({
+        user: agent,
+        data: { idContacto: 10, idPropiedad: 20 },
+      })
+    ).rejects.toMatchObject({ statusCode: 400, message: 'Debe seleccionar una persona física' });
+
+    expect(prismaMock.consulta.create).not.toHaveBeenCalled();
+    expect(prismaMock.visita.create).not.toHaveBeenCalled();
+  });
+
   test('un agente solo lista sus consultas y no puede crear una con contacto o propiedad ajenos', async () => {
     prismaMock.consulta.findMany.mockResolvedValue([]);
     await service.listarConsultas({ user: agent });
@@ -216,7 +240,11 @@ describe('servicios CRM', () => {
       })
     ).rejects.toMatchObject({ statusCode: 404 });
 
-    prismaMock.contacto.findFirst.mockResolvedValue({ id: 10, idUsuario: agent.id });
+    prismaMock.contacto.findFirst.mockResolvedValue({
+      id: 10,
+      idUsuario: agent.id,
+      tipoPersona: 'FISICA',
+    });
     prismaMock.propiedad.findFirst.mockResolvedValue(null);
     await expect(
       service.crearConsulta({
@@ -356,7 +384,11 @@ describe('servicios CRM', () => {
       })
     ).rejects.toMatchObject({ statusCode: 404 });
 
-    prismaMock.contacto.findFirst.mockResolvedValue({ id: 10, idUsuario: agent.id });
+    prismaMock.contacto.findFirst.mockResolvedValue({
+      id: 10,
+      idUsuario: agent.id,
+      tipoPersona: 'FISICA',
+    });
     prismaMock.propiedad.findFirst.mockResolvedValue(null);
     await expect(
       service.crearVisita({
@@ -366,6 +398,25 @@ describe('servicios CRM', () => {
     ).rejects.toMatchObject({ statusCode: 404 });
 
     expect(prismaMock.visita.create).not.toHaveBeenCalled();
+  });
+
+  test('lista visitas de una propiedad accesible y rechaza propiedades ajenas', async () => {
+    prismaMock.visita.findMany.mockResolvedValue([{ id: 5, idPropiedad: 20 }]);
+    await expect(
+      service.listarVisitasPropiedad({ user: agent, idPropiedad: 20 })
+    ).resolves.toEqual([{ id: 5, idPropiedad: 20 }]);
+    expect(prismaMock.visita.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { idPropiedad: 20 },
+        orderBy: [{ fechaHora: 'desc' }, { id: 'desc' }],
+      })
+    );
+
+    prismaMock.propiedad.findFirst.mockResolvedValue(null);
+    await expect(
+      service.listarVisitasPropiedad({ user: agent, idPropiedad: 99 })
+    ).rejects.toMatchObject({ statusCode: 404 });
+    expect(prismaMock.visita.findMany).toHaveBeenCalledTimes(1);
   });
 
   test('lista operaciones y cambia etapa, exigiendo motivo para baja', async () => {
@@ -441,6 +492,7 @@ describe('servicios CRM', () => {
       idOperacion: 30,
       data: { idContacto: 10, monto: '1000', moneda: 'USD', fecha: '2026-01-01' },
     });
+
     expect(prismaMock.oferta.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -487,6 +539,22 @@ describe('servicios CRM', () => {
         data: expect.objectContaining({ nroRenovacion: 1 }),
       })
     );
+  });
+
+  test('rechaza empresas como garantes de contratos', async () => {
+    prismaMock.contacto.findFirst.mockResolvedValue({
+      id: 10,
+      idUsuario: agent.id,
+      tipoPersona: 'JURIDICA',
+    });
+    await expect(
+      service.crearContrato({
+        user: agent,
+        idOperacion: 30,
+        data: { garantes: [10] },
+      })
+    ).rejects.toMatchObject({ statusCode: 400, message: 'Debe seleccionar una persona física' });
+    expect(prismaMock.contratoAlquiler.create).not.toHaveBeenCalled();
   });
 
   test('traduce una colisión de nroRenovacion único a conflicto 409', async () => {

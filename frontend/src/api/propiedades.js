@@ -13,6 +13,10 @@ export function getProperty(id) {
   return apiRequest(`/propiedades/${encodeURIComponent(id)}`);
 }
 
+export function getPropertyVisits(id) {
+  return apiRequest(`/propiedades/${encodeURIComponent(id)}/visitas`);
+}
+
 export function createProperty(property) {
   return apiRequest('/propiedades', { method: 'POST', body: property });
 }
@@ -30,5 +34,5 @@ export function getPropertyCatalogs() {
 }
 
 export function getPropertyContacts() {
-  return apiRequest('/contactos?activo=true');
+  return apiRequest('/contactos?tipoPersona=FISICA&activo=true');
 }

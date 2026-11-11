@@ -242,6 +242,10 @@ const obtenerPropiedad = endpoint((req, res) => {
   const id = parseId(req, res);
   return id === null ? undefined : service.obtenerPropiedad({ user: req.user, id });
 });
+const listarVisitasPropiedad = endpoint((req, res) => {
+  const id = parseId(req, res);
+  return id === null ? undefined : service.listarVisitasPropiedad({ user: req.user, idPropiedad: id });
+});
 const actualizarPropiedad = endpoint((req, res) => {
   const id = parseId(req, res);
   return id === null ? undefined : service.actualizarPropiedad({ user: req.user, id, data: req.body });
@@ -291,6 +295,7 @@ module.exports = {
   crearPropiedad,
   listarPropiedades,
   obtenerPropiedad,
+  listarVisitasPropiedad,
   actualizarPropiedad,
   crearVisita,
   crearOperacion,

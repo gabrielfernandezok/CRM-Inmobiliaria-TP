@@ -12,7 +12,7 @@ import {
 import { getMenu } from '../api/menu.js';
 import { getProperties } from '../api/propiedades.js';
 import ApiErrorMessage from '../components/ApiErrorMessage.jsx';
-import { formatAmount, formatDate, formatEnum } from '../utils/format.js';
+import { formatAmount, formatContactOption, formatDate, formatEnum } from '../utils/format.js';
 
 const CONTRACT_STATES = ['VIGENTE', 'POR_VENCER', 'VENCIDO', 'RENOVADO', 'RESCINDIDO'];
 const ADJUSTMENT_FREQUENCIES = ['TRIMESTRAL', 'SEMESTRAL', 'ANUAL'];
@@ -280,7 +280,7 @@ function OperationActions({
             <span>Contacto</span>
             <select required value={offerForm.idContacto} onChange={(event) => setOfferForm((current) => ({ ...current, idContacto: event.target.value }))}>
               <option value="">Seleccionar contacto</option>
-              {contacts.map((contact) => <option key={contact.id} value={contact.id}>{contactName(contact)}</option>)}
+              {contacts.map((contact) => <option key={contact.id} value={contact.id}>{formatContactOption(contact)}</option>)}
             </select>
           </label>
           <label className="col-12 col-md-6 col-lg-4 field">
@@ -368,7 +368,7 @@ function OperationActions({
           <fieldset className="col-12 role-picker">
             <legend>Garantes (opcional)</legend>
             <div className="role-options">
-              {contacts.map((contact) => (
+              {contacts.filter((contact) => contact.tipoPersona === 'FISICA').map((contact) => (
                 <label key={contact.id} className="role-option">
                   <input
                     type="checkbox"
@@ -380,7 +380,7 @@ function OperationActions({
                         : current.garantes.filter((id) => id !== contact.id),
                     }))}
                   />
-                  <span>{contactName(contact)}</span>
+                  <span>{formatContactOption(contact)}</span>
                 </label>
               ))}
             </div>
@@ -661,7 +661,7 @@ export default function OperationsPage() {
               >
                 <option value="">Sin cliente</option>
                 {contacts.map((contact) => (
-                  <option key={contact.id} value={contact.id}>{contactName(contact)}</option>
+                  <option key={contact.id} value={contact.id}>{formatContactOption(contact)}</option>
                 ))}
               </select>
             </label>

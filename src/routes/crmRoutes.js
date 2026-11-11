@@ -12,6 +12,7 @@ router.get('/consultas', authenticated, requireProfiles(...records), controller.
 
 router.post('/propiedades', authenticated, requireProfiles(...records), validate(controller.createPropiedadSchema), controller.crearPropiedad);
 router.get('/propiedades', authenticated, requireProfiles(...records), controller.listarPropiedades);
+router.get('/propiedades/:id/visitas', authenticated, requireProfiles(...records), controller.listarVisitasPropiedad);
 router.get('/propiedades/:id', authenticated, requireProfiles(...records), controller.obtenerPropiedad);
 router.patch('/propiedades/:id', authenticated, requireProfiles(...records), validate(controller.updatePropiedadSchema), controller.actualizarPropiedad);
 router.post('/visitas', authenticated, requireProfiles(...records), validate(controller.visitaSchema), controller.crearVisita);

@@ -29,6 +29,12 @@ const mockPrisma = {
     update: jest.fn(),
     updateMany: jest.fn(),
   },
+  propiedad: {
+    findFirst: jest.fn(),
+  },
+  visita: {
+    findMany: jest.fn(),
+  },
   contactoRol: {
     create: jest.fn(),
     findMany: jest.fn(),
@@ -122,6 +128,8 @@ describe('API REST - integración HTTP', () => {
     mockPrisma.contacto.findUnique.mockResolvedValue(null);
     mockPrisma.contacto.findFirst.mockResolvedValue(null);
     mockPrisma.contactoRol.findMany.mockResolvedValue([]);
+    mockPrisma.propiedad.findFirst.mockResolvedValue(null);
+    mockPrisma.visita.findMany.mockResolvedValue([]);
   });
 
   function tokenFor(user) {
@@ -465,6 +473,60 @@ describe('API REST - integración HTTP', () => {
         where: expect.objectContaining({ idUsuario: agent.id, activo: true }),
       })
     );
+  });
+
+  test('GET /contactos incluye empresas que representan las personas físicas', async () => {
+    const contact = makeContact(11, agent.id);
+    contact.personaFisica.representantes = [
+      {
+        fechaDesde: new Date(new Date().toISOString().slice(0, 10)),
+        fechaHasta: null,
+        personaJuridica: { razonSocial: 'Inmobiliaria del Sur S.A.' },
+      },
+    ];
+    mockPrisma.contacto.findMany.mockResolvedValue([contact]);
+
+    const response = await request(app)
+      .get('/contactos?tipoPersona=FISICA&activo=true')
+      .set(as(agent));
+
+    expect(response.status).toBe(200);
+    expect(response.body[0]).toMatchObject({
+      tipoPersona: 'FISICA',
+      nombre: 'Pérez Ana',
+      empresasRepresentadas: ['Inmobiliaria del Sur S.A.'],
+    });
+  });
+
+  test('GET /propiedades/:id/visitas devuelve el historial de una propiedad autorizada', async () => {
+    mockPrisma.propiedad.findFirst.mockResolvedValue({ id: 20, idUsuario: agent.id });
+    mockPrisma.visita.findMany.mockResolvedValue([
+      {
+        id: 4,
+        idPropiedad: 20,
+        fechaHora: new Date('2026-03-10T12:30:00.000Z'),
+        resultado: 'Interesada en la propiedad',
+      },
+    ]);
+
+    const response = await request(app)
+      .get('/propiedades/20/visitas')
+      .set(as(agent));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0]).toMatchObject({
+      id: 4,
+      idPropiedad: 20,
+      resultado: 'Interesada en la propiedad',
+    });
+
+    mockPrisma.propiedad.findFirst.mockResolvedValue(null);
+    const deniedResponse = await request(app)
+      .get('/propiedades/21/visitas')
+      .set(as(agent));
+    expect(deniedResponse.status).toBe(404);
+    expect(mockPrisma.visita.findMany).toHaveBeenCalledTimes(1);
   });
 
   test('POST /contactos crea un contacto con el agente autenticado como dueño', async () => {

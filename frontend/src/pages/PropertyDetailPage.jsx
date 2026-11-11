@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { createVisit, getProperty, getPropertyContacts } from '../api/propiedades.js';
+import {
+  createVisit,
+  getProperty,
+  getPropertyContacts,
+  getPropertyVisits,
+} from '../api/propiedades.js';
 import { getMenu } from '../api/menu.js';
 import ApiErrorMessage from '../components/ApiErrorMessage.jsx';
-import { formatDate, formatEnum } from '../utils/format.js';
+import {
+  formatContactOption,
+  formatDate,
+  formatDateTime,
+  formatEnum,
+} from '../utils/format.js';
 
 function findPropertiesProgram(menus) {
   for (const menu of menus) {
@@ -36,6 +46,7 @@ export default function PropertyDetailPage() {
   const { id } = useParams();
   const location = useLocation();
   const [property, setProperty] = useState(null);
+  const [visits, setVisits] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [permissions, setPermissions] = useState(null);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
@@ -44,6 +55,8 @@ export default function PropertyDetailPage() {
   const [visitForm, setVisitForm] = useState({ idContacto: '', fechaHora: '', resultado: '' });
   const [error, setError] = useState(null);
   const [visitError, setVisitError] = useState(null);
+  const [visitsError, setVisitsError] = useState(null);
+  const [visitsLoading, setVisitsLoading] = useState(true);
   const [menuError, setMenuError] = useState(null);
   const [success, setSuccess] = useState(location.state?.saved ? 'Los cambios se guardaron correctamente.' : '');
   const [submittingVisit, setSubmittingVisit] = useState(false);
@@ -70,13 +83,25 @@ export default function PropertyDetailPage() {
         setMenuError(menuResult.reason);
       }
       setPermissionsLoaded(true);
-      const propertyResult = await getProperty(id).then(
-        (value) => ({ status: 'fulfilled', value }),
-        (reason) => ({ status: 'rejected', reason })
-      );
+      const [propertyResult, visitsResult] = await Promise.all([
+        getProperty(id).then(
+          (value) => ({ status: 'fulfilled', value }),
+          (reason) => ({ status: 'rejected', reason })
+        ),
+        getPropertyVisits(id).then(
+          (value) => ({ status: 'fulfilled', value }),
+          (reason) => ({ status: 'rejected', reason })
+        ),
+      ]);
       if (!active) return;
       if (propertyResult.status === 'fulfilled') setProperty(propertyResult.value);
       else setError(propertyResult.reason);
+      if (visitsResult.status === 'fulfilled') {
+        setVisits(Array.isArray(visitsResult.value) ? visitsResult.value : []);
+      } else {
+        setVisitsError(visitsResult.reason);
+      }
+      setVisitsLoading(false);
       setLoading(false);
     }
     loadDetail();
@@ -127,6 +152,13 @@ export default function PropertyDetailPage() {
       });
       setVisitForm({ idContacto: '', fechaHora: '', resultado: '' });
       setSuccess('La visita quedó registrada.');
+      try {
+        const result = await getPropertyVisits(id);
+        setVisits(Array.isArray(result) ? result : []);
+        setVisitsError(null);
+      } catch (requestError) {
+        setVisitsError(requestError);
+      }
     } catch (requestError) {
       setVisitError(requestError);
     } finally {
@@ -225,6 +257,46 @@ export default function PropertyDetailPage() {
         <div className="notice notice-info" role="status">No tenés permiso para ver esta propiedad.</div>
       )}
 
+      {canView && (
+        <section className="contact-card">
+          <div className="contact-card-heading">
+            <div>
+              <h2>Visitas</h2>
+              <p className="muted">Historial de visitas registradas para esta propiedad.</p>
+            </div>
+          </div>
+          <ApiErrorMessage error={visitsError} />
+          {visitsLoading ? (
+            <p className="muted" role="status">Cargando visitas…</p>
+          ) : visits.length === 0 && !visitsError ? (
+            <p className="empty-state">Todavía no hay visitas registradas para esta propiedad.</p>
+          ) : visits.length > 0 ? (
+            <div className="table-scroll">
+              <table className="property-visits-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Fecha y hora</th>
+                    <th scope="col">Contacto</th>
+                    <th scope="col">Resultado</th>
+                    <th scope="col">Registrada por</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visits.map((visit) => (
+                    <tr key={visit.id}>
+                      <td>{formatDateTime(visit.fechaHora)}</td>
+                      <td>{formatContactOption(visit.contacto)}</td>
+                      <td>{visit.resultado || '—'}</td>
+                      <td>{visit.usuario?.nombreUsuario || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </section>
+      )}
+
       {canView && canCreate && (
         <section className="contact-card">
           <h2>Registrar visita</h2>
@@ -241,7 +313,7 @@ export default function PropertyDetailPage() {
               >
                 <option value="">{contactsLoading ? 'Cargando contactos…' : 'Seleccionar contacto'}</option>
                 {contacts.map((contact) => (
-                  <option key={contact.id} value={contact.id}>{contact.nombre}</option>
+                  <option key={contact.id} value={contact.id}>{formatContactOption(contact)}</option>
                 ))}
               </select>
             </label>

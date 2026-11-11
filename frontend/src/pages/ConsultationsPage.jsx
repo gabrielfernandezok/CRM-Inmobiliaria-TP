@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createConsultation, getConsultationCatalogs, getConsultationContacts, getConsultationProperties, getConsultations } from '../api/consultas.js';
 import { getMenu } from '../api/menu.js';
 import ApiErrorMessage from '../components/ApiErrorMessage.jsx';
-import { formatDate, formatEnum } from '../utils/format.js';
+import { formatContactOption, formatDate, formatEnum } from '../utils/format.js';
 
 const initialForm = {
   idContacto: '',
@@ -21,13 +21,6 @@ function findConsultationProgram(menus) {
     }
   }
   return null;
-}
-
-function displayContact(contact) {
-  if (!contact) return '—';
-  return contact.personaFisica
-    ? `${contact.personaFisica.apellido} ${contact.personaFisica.nombres}`.trim()
-    : contact.personaJuridica?.razonSocial || `Contacto #${contact.id}`;
 }
 
 function displayProperty(property) {
@@ -198,7 +191,7 @@ export default function ConsultationsPage() {
                 <option value="">Seleccionar contacto</option>
                 {contacts.map((contact) => (
                   <option key={contact.id} value={contact.id}>
-                    {contact.nombre} · {contact.activo ? 'Activo' : 'Inactivo'}
+                    {formatContactOption(contact)} · {contact.activo ? 'Activo' : 'Inactivo'}
                   </option>
                 ))}
               </select>
@@ -270,7 +263,7 @@ export default function ConsultationsPage() {
                   {consultations.map((consultation) => (
                     <tr key={consultation.id}>
                       <td>{formatDate(consultation.fecha)}</td>
-                      <td>{displayContact(consultation.contacto)}</td>
+                      <td>{formatContactOption(consultation.contacto)}</td>
                       <td>{consultation.canal?.descripcion || '—'}</td>
                       <td>{displayProperty(consultation.propiedad)}</td>
                       <td className="consultation-message">{consultation.mensaje}</td>

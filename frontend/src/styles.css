@@ -414,6 +414,10 @@ select:focus-visible {
   min-width: 1000px;
 }
 
+.property-visits-table {
+  min-width: 720px;
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;

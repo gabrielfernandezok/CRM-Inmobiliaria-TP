@@ -33,6 +33,14 @@ async function getContact(user, id) {
   return contact;
 }
 
+async function getPersonContact(user, id) {
+  const contact = await getContact(user, id);
+  if (contact.tipoPersona !== 'FISICA') {
+    throw errorWithStatus(400, 'Debe seleccionar una persona física');
+  }
+  return contact;
+}
+
 async function getProperty(user, id) {
   const property = await prisma.propiedad.findFirst({
     where: { id, ...ownedWhere(user) },
@@ -106,7 +114,7 @@ async function crearBusqueda({ user, idContacto, data }) {
 
 async function crearConsulta({ user, data }) {
   assertSupportedUser(user);
-  await getContact(user, data.idContacto);
+  await getPersonContact(user, data.idContacto);
   if (data.idPropiedad !== undefined && data.idPropiedad !== null) {
     await getProperty(user, data.idPropiedad);
   }
@@ -247,7 +255,7 @@ async function actualizarPropiedad({ user, id, data }) {
 
 async function crearVisita({ user, data }) {
   assertSupportedUser(user);
-  await getContact(user, data.idContacto);
+  await getPersonContact(user, data.idContacto);
   await getProperty(user, data.idPropiedad);
   return prisma.visita.create({
     data: {
@@ -256,6 +264,29 @@ async function crearVisita({ user, data }) {
       fechaHora: data.fechaHora ? new Date(data.fechaHora) : undefined,
     },
     include: { contacto: true, propiedad: true },
+  });
+}
+
+async function listarVisitasPropiedad({ user, idPropiedad }) {
+  await getProperty(user, idPropiedad);
+  return prisma.visita.findMany({
+    where: { idPropiedad },
+    include: {
+      contacto: {
+        include: {
+          personaFisica: {
+            include: {
+              representantes: {
+                include: { personaJuridica: { select: { razonSocial: true } } },
+              },
+            },
+          },
+          personaJuridica: true,
+        },
+      },
+      usuario: { select: { id: true, nombreUsuario: true } },
+    },
+    orderBy: [{ fechaHora: 'desc' }, { id: 'desc' }],
   });
 }
 
@@ -363,7 +394,9 @@ async function crearContrato({ user, idOperacion, data }) {
   if (operation.tipoOperacion !== 'ALQUILER') {
     throw errorWithStatus(400, 'Solo se pueden crear contratos para operaciones de alquiler');
   }
-  await requireIdsExist(prisma.contacto, data.garantes, 'Uno o más garantes no existen');
+  for (const idContacto of data.garantes) {
+    await getPersonContact(user, idContacto);
+  }
   const { garantes, ...contractData } = data;
   try {
     return await prisma.$transaction(async (tx) => {
@@ -490,6 +523,7 @@ module.exports = {
   obtenerPropiedad,
   actualizarPropiedad,
   crearVisita,
+  listarVisitasPropiedad,
   crearOperacion,
   listarOperaciones,
   cambiarEtapaOperacion,
