@@ -11,8 +11,12 @@ const mockPrisma = {
     update: jest.fn(),
   },
   perfil: {
+    findMany: jest.fn(),
     findUnique: jest.fn(),
     create: jest.fn(),
+  },
+  programa: {
+    findMany: jest.fn(),
   },
   rol: {
     upsert: jest.fn(),
@@ -32,6 +36,9 @@ const mockPrisma = {
   perfilUsuario: {
     create: jest.fn(),
     createMany: jest.fn(),
+  },
+  perfilPrograma: {
+    findMany: jest.fn(),
   },
   $transaction: jest.fn(),
 };
@@ -301,6 +308,44 @@ describe('API REST - integración HTTP', () => {
     expect(mockPrisma.contacto.findMany).not.toHaveBeenCalled();
   });
 
+  test('GET /perfiles/:id/programas devuelve el catálogo y permisos solo al administrador', async () => {
+    mockPrisma.perfil.findUnique.mockResolvedValue({ id: 2, nombre: 'Agente' });
+    mockPrisma.programa.findMany.mockResolvedValue([
+      {
+        id: 4,
+        idMenu: 1,
+        nombre: 'Contactos',
+        ruta: '/contactos',
+        orden: 1,
+        menu: { id: 1, nombre: 'CRM', orden: 1 },
+        perfiles: [],
+      },
+    ]);
+
+    const response = await request(app).get('/perfiles/2/programas').set(as(admin));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: 2,
+      nombre: 'Agente',
+      programas: [
+        {
+          idPrograma: 4,
+          nombre: 'Contactos',
+          puedeVer: false,
+          puedeCrear: false,
+          puedeEditar: false,
+          puedeEliminar: false,
+        },
+      ],
+    });
+
+    const forbiddenResponse = await request(app)
+      .get('/perfiles/2/programas')
+      .set(as(agent));
+    expect(forbiddenResponse.status).toBe(403);
+  });
+
   test('POST /contactos devuelve 400 si faltan datos obligatorios', async () => {
     const response = await request(app)
       .post('/contactos')
@@ -529,6 +574,47 @@ describe('API REST - integración HTTP', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Recurso no encontrado');
+  });
+
+  test('GET /contactos/:id incluye las empresas representadas por la persona física', async () => {
+    const contact = makeContact(12, agent.id);
+    contact.personaFisica.representantes = [
+      {
+        idPersonaFisica: 12,
+        idPersonaJuridica: 30,
+        cargo: 'Apoderada',
+        fechaDesde: new Date('2024-01-01T00:00:00.000Z'),
+        fechaHasta: null,
+        esPrincipal: true,
+        personaJuridica: {
+          id: 30,
+          razonSocial: 'Inmobiliaria del Sur S.A.',
+        },
+      },
+    ];
+    mockPrisma.contacto.findUnique.mockResolvedValue(contact);
+
+    const response = await request(app).get('/contactos/12').set(as(agent));
+
+    expect(response.status).toBe(200);
+    expect(response.body.personaFisica.representantes[0]).toMatchObject({
+      idPersonaJuridica: 30,
+      cargo: 'Apoderada',
+      personaJuridica: { razonSocial: 'Inmobiliaria del Sur S.A.' },
+    });
+    expect(mockPrisma.contacto.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          personaFisica: {
+            include: {
+              representantes: {
+                include: { personaJuridica: true },
+              },
+            },
+          },
+        }),
+      })
+    );
   });
 
   test('PATCH /contactos/:id no permite al agente modificar el contacto de otro agente', async () => {

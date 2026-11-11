@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "prisma:generate": "npx prisma generate",
     "prisma:validate": "npx prisma validate",
+    "prisma:seed:catalogs": "node prisma/seedCatalogsOnly.js",
     "test": "jest --runInBand --coverage"
   },
   "prisma": {

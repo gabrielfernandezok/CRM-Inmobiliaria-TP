@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   obtenerPerfiles,
+  obtenerProgramas,
   listar,
   actualizarPerfiles,
   updatePerfilesSchema,
@@ -14,6 +15,7 @@ const router = express.Router();
 const perfilesAdministrativos = ['Administrador', 'Corredor/Gerente'];
 
 router.get('/perfiles', requireAuth, requireProfiles(...perfilesAdministrativos), obtenerPerfiles);
+router.get('/perfiles/:id/programas', requireAuth, requireProfiles('Administrador'), obtenerProgramas);
 router.get('/usuarios', requireAuth, requireProfiles('Administrador'), listar);
 router.put(
   '/usuarios/:id/perfiles',

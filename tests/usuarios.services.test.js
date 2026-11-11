@@ -85,6 +85,61 @@ describe('servicios administrativos', () => {
     });
   });
 
+  test('lista todos los programas de un perfil y desactiva permisos no configurados', async () => {
+    mockPrisma.perfil.findUnique.mockResolvedValue({ id: 2, nombre: 'Agente' });
+    mockPrisma.programa.findMany.mockResolvedValue([
+      {
+        id: 4,
+        idMenu: 1,
+        nombre: 'Contactos',
+        ruta: '/contactos',
+        orden: 1,
+        menu: { id: 1, nombre: 'CRM', orden: 1 },
+        perfiles: [{ puedeVer: true, puedeCrear: false, puedeEditar: false, puedeEliminar: false }],
+      },
+      {
+        id: 5,
+        idMenu: 1,
+        nombre: 'Propiedades',
+        ruta: '/propiedades',
+        orden: 2,
+        menu: { id: 1, nombre: 'CRM', orden: 1 },
+        perfiles: [],
+      },
+    ]);
+
+    await expect(service.obtenerProgramasPerfil({ idPerfil: 2 })).resolves.toEqual({
+      id: 2,
+      nombre: 'Agente',
+      programas: [
+        {
+          idMenu: 1,
+          nombre: 'Contactos',
+          ruta: '/contactos',
+          orden: 1,
+          menu: { id: 1, nombre: 'CRM', orden: 1 },
+          idPrograma: 4,
+          puedeVer: true,
+          puedeCrear: false,
+          puedeEditar: false,
+          puedeEliminar: false,
+        },
+        {
+          idMenu: 1,
+          nombre: 'Propiedades',
+          ruta: '/propiedades',
+          orden: 2,
+          menu: { id: 1, nombre: 'CRM', orden: 1 },
+          idPrograma: 5,
+          puedeVer: false,
+          puedeCrear: false,
+          puedeEditar: false,
+          puedeEliminar: false,
+        },
+      ],
+    });
+  });
+
   test('rechaza usuario inexistente, autoedición e ids de perfil desconocidos', async () => {
     mockPrisma.usuario.findUnique.mockResolvedValueOnce(null);
     await expect(

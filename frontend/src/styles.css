@@ -231,6 +231,454 @@ select:focus-visible {
   line-height: 1.15;
 }
 
+.page-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.page-heading .muted {
+  margin-bottom: 0;
+}
+
+.contact-filters {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.contact-form {
+  margin-top: 1.25rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd8d1;
+  border-radius: 8px;
+  color: #20342c;
+  background: #fff;
+  font: inherit;
+  resize: vertical;
+}
+
+.field-hint {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 400;
+}
+
+.representative-section {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f9fbfa;
+}
+
+.representative-section h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.representative-section > .muted {
+  margin: 0;
+}
+
+.representative-section .notice {
+  margin: 0;
+}
+
+.role-picker {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.role-picker legend {
+  padding: 0 0.35rem;
+  color: #34443e;
+  font-weight: 700;
+}
+
+.role-picker .field-hint {
+  margin: 0;
+}
+
+.role-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: 0.5rem;
+}
+
+.role-option {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.role-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green-700);
+}
+
+.contact-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.button-secondary {
+  border-color: var(--border);
+  color: #34443e;
+  background: #fff;
+}
+
+.empty-state {
+  padding: 1rem;
+  border: 1px dashed #b9c9c1;
+  border-radius: 10px;
+  color: var(--text-muted);
+  background: #fff;
+}
+
+.consultation-table table {
+  min-width: 860px;
+}
+
+.properties-table {
+  min-width: 760px;
+}
+
+.owner-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.owner-remove {
+  justify-self: start;
+}
+
+.operation-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.operation-card {
+  margin-top: 0;
+}
+
+.operation-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.operation-actions > .notice {
+  margin: 0;
+}
+
+.action-form {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f9fbfa;
+}
+
+.rental-contract-table {
+  min-width: 1000px;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.admin-user-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-user-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fbfcfb;
+}
+
+.admin-user-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-user-heading h3,
+.admin-permission-group h3 {
+  margin: 0;
+  color: #1a332b;
+}
+
+.admin-user-heading .muted,
+.admin-last-access {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}
+
+.admin-user-inactive {
+  color: #76291f;
+  background: #fff1ee;
+}
+
+.admin-user-card .role-picker {
+  padding: 0.8rem;
+}
+
+.admin-profile-select {
+  max-width: 420px;
+  margin-bottom: 1.25rem;
+}
+
+.admin-permission-group {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.admin-permission-table {
+  min-width: 760px;
+}
+
+.admin-permission-table th:not(:first-child),
+.admin-permission-table td:not(:first-child) {
+  text-align: center;
+}
+
+.admin-permission-table input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green-700);
+}
+
+.admin-save-actions {
+  margin-top: 1rem;
+}
+
+.contract-status-vigente {
+  color: #24543b;
+  background: #edf8f1;
+}
+
+.contract-status-por_vencer {
+  color: #70531a;
+  background: #fff3d4;
+}
+
+.contract-status-vencido,
+.contract-status-rescindido {
+  color: #76291f;
+  background: #fff1ee;
+}
+
+.contract-status-renovado {
+  color: #285276;
+  background: #e7f2fb;
+}
+
+.consultation-message {
+  max-width: 360px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.status-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pendiente {
+  color: #70531a;
+  background: #fff3d4;
+}
+
+.status-en_seguimiento {
+  color: #285276;
+  background: #e7f2fb;
+}
+
+.status-cerrada {
+  color: #24543b;
+  background: #edf8f1;
+}
+
+.notice-info {
+  border: 1px solid #bfd2df;
+  color: #28485d;
+  background: #eff7fc;
+}
+
+.contact-card {
+  margin-top: 1.25rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px #163a3210;
+}
+
+.contact-card > h2,
+.contact-card-heading h2 {
+  margin: 0;
+  color: #1a332b;
+  font-size: 1.2rem;
+}
+
+.contact-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.contact-card-heading .muted {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+}
+
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.button-danger {
+  border-color: #dbb3ae;
+  color: #76291f;
+  background: #fff1ee;
+}
+
+.button-danger:hover {
+  background: #fbe2de;
+}
+
+.contact-details {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.contact-details > div {
+  grid-column: span 12;
+  min-width: 0;
+}
+
+.contact-details dt {
+  margin-bottom: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.contact-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.contact-detail-wide {
+  grid-column: span 12 !important;
+}
+
+.contact-related {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.contact-related h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.contact-related ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.interaction-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.interaction-item {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #fbfcfb;
+}
+
+.interaction-item > :last-child {
+  margin-bottom: 0;
+}
+
+.interaction-item-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.interaction-item-heading time {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.interaction-item p {
+  margin: 0.65rem 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .eyebrow {
   margin: 0 0 0.5rem;
   color: var(--green-700);
@@ -451,6 +899,14 @@ select:focus-visible {
     grid-column: span 6;
   }
 
+  .owner-form-row {
+    grid-template-columns: minmax(0, 1fr) minmax(8rem, 0.45fr) auto;
+  }
+
+  .contact-details > div {
+    grid-column: span 6;
+  }
+
   .summary-card {
     grid-column: span 6;
   }
@@ -491,6 +947,10 @@ select:focus-visible {
   }
 
   .col-lg-4 {
+    grid-column: span 4;
+  }
+
+  .contact-details > div {
     grid-column: span 4;
   }
 

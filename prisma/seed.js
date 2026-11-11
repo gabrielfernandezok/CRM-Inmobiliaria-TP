@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
+const { seedCatalogs } = require('./seedCatalogs');
 
 const prisma = new PrismaClient();
 
@@ -93,6 +94,8 @@ async function seed() {
       });
       roleByName.set(descripcionRol, rol);
     }
+
+    await seedCatalogs(tx, perfilByName);
 
     const [userByName, userByMail, personByDni] = await Promise.all([
       tx.usuario.findUnique({
@@ -207,7 +210,7 @@ async function seed() {
     });
   });
 
-  console.log('Seed completado: perfiles, roles y usuario Administrador verificados.');
+  console.log('Seed completado: perfiles, roles, catálogos, permisos y usuario Administrador verificados.');
 }
 
 seed()

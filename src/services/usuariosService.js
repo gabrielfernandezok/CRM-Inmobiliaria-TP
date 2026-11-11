@@ -31,6 +31,51 @@ async function listarPerfiles() {
   });
 }
 
+async function obtenerProgramasPerfil({ idPerfil }) {
+  const perfil = await prisma.perfil.findUnique({
+    where: { id: idPerfil },
+    select: { id: true, nombre: true },
+  });
+  if (!perfil) throw errorWithStatus(404, 'Perfil no encontrado');
+
+  const programas = await prisma.programa.findMany({
+    select: {
+      id: true,
+      idMenu: true,
+      nombre: true,
+      ruta: true,
+      orden: true,
+      menu: {
+        select: { id: true, nombre: true, orden: true },
+      },
+      perfiles: {
+        where: { idPerfil },
+        select: {
+          puedeVer: true,
+          puedeCrear: true,
+          puedeEditar: true,
+          puedeEliminar: true,
+        },
+      },
+    },
+    orderBy: [{ menu: { orden: 'asc' } }, { orden: 'asc' }],
+  });
+
+  return {
+    ...perfil,
+    programas: programas.map(({ id, perfiles, ...programa }) => ({
+      ...programa,
+      idPrograma: id,
+      ...(perfiles[0] || {
+        puedeVer: false,
+        puedeCrear: false,
+        puedeEditar: false,
+        puedeEliminar: false,
+      }),
+    })),
+  };
+}
+
 async function listarUsuarios() {
   const usuarios = await prisma.usuario.findMany({
     select: {
@@ -209,6 +254,7 @@ async function actualizarProgramasPerfil({ idPerfil, programas }) {
 
 module.exports = {
   listarPerfiles,
+  obtenerProgramasPerfil,
   listarUsuarios,
   actualizarPerfilesUsuario,
   actualizarProgramasPerfil,

@@ -39,6 +39,37 @@ export default function AppLayout() {
     navigate('/login', { replace: true });
   }
 
+  const contactsInMenu = menu.some((item) =>
+    (item.programas || []).some((programa) =>
+      ['/contactos', 'contactos'].includes(programa.ruta)
+    )
+  );
+  const consultationsInMenu = menu.some((item) =>
+    (item.programas || []).some((programa) =>
+      ['/consultas', 'consultas'].includes(programa.ruta)
+    )
+  );
+  const propertiesInMenu = menu.some((item) =>
+    (item.programas || []).some((programa) =>
+      ['/propiedades', 'propiedades'].includes(programa.ruta)
+    )
+  );
+  const operationsInMenu = menu.some((item) =>
+    (item.programas || []).some((programa) =>
+      ['/operaciones', 'operaciones'].includes(programa.ruta)
+    )
+  );
+  const contractsInMenu = menu.some((item) =>
+    (item.programas || []).some((programa) =>
+      ['/contratos', 'contratos'].includes(programa.ruta)
+    )
+  );
+  const administrationInMenu = menu.some((item) =>
+    (item.programas || []).some((programa) =>
+      ['/administracion', 'administracion'].includes(programa.ruta)
+    )
+  );
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -81,6 +112,60 @@ export default function AppLayout() {
             >
               Inicio
             </NavLink>
+            {!contactsInMenu && (
+              <NavLink
+                to="/contactos"
+                className={({ isActive }) => `nav-home${isActive ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Contactos
+              </NavLink>
+            )}
+            {!consultationsInMenu && (
+              <NavLink
+                to="/consultas"
+                className={({ isActive }) => `nav-home${isActive ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Consultas
+              </NavLink>
+            )}
+            {!propertiesInMenu && (
+              <NavLink
+                to="/propiedades"
+                className={({ isActive }) => `nav-home${isActive ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Propiedades
+              </NavLink>
+            )}
+            {!operationsInMenu && (
+              <NavLink
+                to="/operaciones"
+                className={({ isActive }) => `nav-home${isActive ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Operaciones
+              </NavLink>
+            )}
+            {!contractsInMenu && (
+              <NavLink
+                to="/contratos"
+                className={({ isActive }) => `nav-home${isActive ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Contratos
+              </NavLink>
+            )}
+            {user?.perfiles?.includes('Administrador') && !administrationInMenu && (
+              <NavLink
+                to="/administracion"
+                className={({ isActive }) => `nav-home${isActive ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Administración
+              </NavLink>
+            )}
             {menuLoading && <p className="sidebar-message">Cargando menú…</p>}
             {menuError && <p className="sidebar-message">No se pudo cargar el menú.</p>}
             {menu.map((item) => (

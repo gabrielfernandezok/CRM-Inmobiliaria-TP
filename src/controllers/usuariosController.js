@@ -1,6 +1,7 @@
 const { z } = require('zod');
 const {
   listarPerfiles,
+  obtenerProgramasPerfil,
   listarUsuarios,
   actualizarPerfilesUsuario,
   actualizarProgramasPerfil,
@@ -49,6 +50,15 @@ async function obtenerPerfiles(req, res, next) {
   }
 }
 
+async function obtenerProgramas(req, res, next) {
+  try {
+    const perfil = await obtenerProgramasPerfil({ idPerfil: parseId(req.params.id) });
+    return res.status(200).json(perfil);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function listar(req, res, next) {
   try {
     const usuarios = await listarUsuarios();
@@ -85,6 +95,7 @@ async function actualizarProgramas(req, res, next) {
 
 module.exports = {
   obtenerPerfiles,
+  obtenerProgramas,
   listar,
   actualizarPerfiles,
   updatePerfilesSchema,

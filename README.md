@@ -25,13 +25,19 @@ npm run prisma:generate
 npx prisma db push
 ```
 
-Carga los perfiles, roles y el usuario administrador inicial:
+Carga los perfiles, roles, catálogos de trabajo, programas, permisos iniciales y el usuario administrador:
 
 ```powershell
 npx prisma db seed
 ```
 
-El seed puede ejecutarse varias veces. Las variables `ADMIN_*` deben estar configuradas en `.env` antes de ejecutarlo.
+El seed puede ejecutarse varias veces. Agrega los catálogos faltantes y solo crea permisos predeterminados que todavía no existen, sin sobrescribir los permisos personalizados. Las variables `ADMIN_*` deben estar configuradas en `.env` antes de ejecutarlo. Para una base que ya tiene usuario administrador, usá el comando de carga segura indicado abajo.
+
+Para una base ya inicializada, carga solo los programas, permisos predeterminados y catálogos, sin volver a tocar los datos del usuario administrador:
+
+```powershell
+npm run prisma:seed:catalogs
+```
 
 ## Ejecutar
 

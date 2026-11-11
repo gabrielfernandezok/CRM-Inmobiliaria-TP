@@ -5,6 +5,16 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import ComingSoonPage from './pages/ComingSoonPage.jsx';
+import ContactsPage from './pages/ContactsPage.jsx';
+import CreateContactPage from './pages/CreateContactPage.jsx';
+import ContactDetailPage from './pages/ContactDetailPage.jsx';
+import ConsultationsPage from './pages/ConsultationsPage.jsx';
+import PropertiesPage from './pages/PropertiesPage.jsx';
+import PropertyFormPage from './pages/PropertyFormPage.jsx';
+import PropertyDetailPage from './pages/PropertyDetailPage.jsx';
+import OperationsPage from './pages/OperationsPage.jsx';
+import RentalContractsPage from './pages/RentalContractsPage.jsx';
+import AdministrationPage from './pages/AdministrationPage.jsx';
 
 export default function App() {
   return (
@@ -14,6 +24,17 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="contactos" element={<ContactsPage />} />
+          <Route path="contactos/nuevo" element={<CreateContactPage />} />
+          <Route path="contactos/:id" element={<ContactDetailPage />} />
+          <Route path="consultas" element={<ConsultationsPage />} />
+          <Route path="propiedades" element={<PropertiesPage />} />
+          <Route path="propiedades/nueva" element={<PropertyFormPage mode="create" />} />
+          <Route path="propiedades/:id/editar" element={<PropertyFormPage mode="edit" />} />
+          <Route path="propiedades/:id" element={<PropertyDetailPage />} />
+          <Route path="operaciones" element={<OperationsPage />} />
+          <Route path="contratos" element={<RentalContractsPage />} />
+          <Route path="administracion" element={<AdministrationPage />} />
           <Route path="*" element={<ComingSoonPage />} />
         </Route>
       </Route>
